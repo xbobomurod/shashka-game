@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="uz">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Shashka O'yini</title>
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
+
+		body {
+			font-family: 'Arial', sans-serif;
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			min-height: 100vh;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			padding: 20px;
+		}
+
+		.game-container {
+			background: rgba(255, 255, 255, 0.95);
+			border-radius: 20px;
+			padding: 30px;
+			box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+			text-align: center;
+			backdrop-filter: blur(10px);
+		}
+
+		h1 {
+			color: #333;
+			margin-bottom: 20px;
+			font-size: 2.5rem;
+			text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+		}
+
+		.game-info {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 20px;
+			padding: 15px;
+			background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%);
+			border-radius: 15px;
+			color: white;
+			font-weight: bold;
+			font-size: 18px;
+		}
+
+		.board {
+			display: grid;
+			grid-template-columns: repeat(8, 60px);
+			grid-template-rows: repeat(8, 60px);
+			gap: 2px;
+			margin: 0 auto 20px;
+			border: 4px solid #333;
+			border-radius: 12px;
+			overflow: hidden;
+			box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+		}
+
+		.cell {
+			width: 60px;
+			height: 60px;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			cursor: pointer;
+			transition: all 0.3s ease;
+			position: relative;
+		}
+
+		.cell.light {
+			background: #f0d9b5;
+		}
+
+		.cell.dark {
+			background: #b58863;
+		}
+
+		.cell.possible-move {
+			background: rgba(0, 255, 0, 0.5) !important;
+			animation: pulse 1s infinite;
+		}
+
+		.cell.possible-capture {
+			background: rgba(255, 0, 0, 0.5) !important;
+			animation: pulse 1s infinite;
+		}
+
+		.cell.selected {
+			background: rgba(255, 255, 0, 0.7) !important;
+			box-shadow: inset 0 0 15px rgba(255, 215, 0, 0.9);
+		}
+
+		@keyframes pulse {
+
+			0%,
+			100% {
+				opacity: 0.4;
+			}
+
+			50% {
+				opacity: 0.8;
+			}
+		}
+
+		.piece {
+			width: 45px;
+			height: 45px;
+			border-radius: 50%;
+			border: 3px solid #333;
+			cursor: pointer;
+			transition: all 0.3s ease;
+			box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+			position: relative;
+		}
+
+		.piece:hover {
+			transform: scale(1.1);
+			box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+		}
+
+		.piece.white {
+			background: radial-gradient(circle at 30% 30%, #ffffff, #e0e0e0);
+		}
+
+		.piece.black {
+			background: radial-gradient(circle at 30% 30%, #636e72, #2d3436);
+		}
+
+		.piece.dama::after {
+			content: '♛';
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			color: gold;
+			font-size: 22px;
+			text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+		}
+
+		.controls {
+			display: flex;
+			gap: 15px;
+			justify-content: center;
+			margin-top: 20px;
+		}
+
+		button {
+			padding: 12px 24px;
+			background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
+			color: white;
+			border: none;
+			border-radius: 25px;
+			cursor: pointer;
+			font-weight: bold;
+			font-size: 16px;
+			transition: all 0.3s ease;
+			box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+		}
+
+		button:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 8px 25px rgba(79, 172, 254, 0.6);
+		}
+
+		.message {
+			margin-top: 15px;
+			padding: 15px;
+			border-radius: 10px;
+			font-weight: bold;
+			font-size: 18px;
+			min-height: 25px;
+		}
+
+		.message.winner {
+			background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
+			color: white;
+			animation: celebrate 2s infinite;
+		}
+
+		.message.capture-mode {
+			background: linear-gradient(45deg, #ff9a9e 0%, #fecfef 100%);
+			color: #333;
+		}
+
+		@keyframes celebrate {
+
+			0%,
+			100% {
+				transform: scale(1);
+			}
+
+			50% {
+				transform: scale(1.05);
+			}
+		}
+
+		.score {
+			display: flex;
+			justify-content: space-around;
+			margin-bottom: 15px;
+		}
+
+		.score-item {
+			padding: 10px 20px;
+			border-radius: 15px;
+			font-weight: bold;
+			color: white;
+			font-size: 16px;
+		}
+
+		.score-white {
+			background: linear-gradient(45deg, #74b9ff, #0984e3);
+		}
+
+		.score-black {
+			background: linear-gradient(45deg, #636e72, #2d3436);
+		}
+	</style>
+</head>
+
+<body>
+	<div class="game-container">
+		<h1>♛ Shashka O'yini</h1>
+
+		<div class="score">
+			<div class="score-item score-white">
+				Oq: <span id="whiteScore">12</span>
+			</div>
+			<div class="score-item score-black">
+				Qora: <span id="blackScore">12</span>
+			</div>
+		</div>
+
+		<div class="game-info">
+			<div>Navbat: <span id="currentPlayer">Oq</span></div>
+			<div>Urilgan: <span id="captured">0</span></div>
+		</div>
+
+		<div class="board" id="board"></div>
+
+		<div class="controls">
+			<button onclick="resetGame()">🔄 Yangi O'yin</button>
+			<button onclick="undoMove()">↩️ Orqaga</button>
+			<button onclick="showRules()">📖 Qoidalar</button>
+		</div>
+
+		<div class="message" id="message"></div>
+	</div>
+
+	<script>
+		class ShashkaGame {
+			constructor() {
+				this.board = []
+				this.currentPlayer = 'white'
+				this.selectedPiece = null
+				this.possibleMoves = []
+				this.gameHistory = []
+				this.capturedPieces = { white: 0, black: 0 }
+				this.mustCapture = false
+				this.captureSequence = false
+				this.init()
+			}
+
+			init() {
+				this.createBoard()
+				this.setupPieces()
+				this.render()
+				this.updateDisplay()
+			}
+
+			createBoard() {
+				this.board = []
+				for (let row = 0; row < 8; row++) {
+					this.board[row] = []
+					for (let col = 0; col < 8; col++) {
+						this.board[row][col] = null
+					}
+				}
+			}
+
+			setupPieces() {
+				// Qora shashkalar (yuqori 3 qator, faqat qora kataklar)
+				for (let row = 0; row < 3; row++) {
+					for (let col = 0; col < 8; col++) {
+						if ((row + col) % 2 === 1) {
+							this.board[row][col] = { color: 'black', dama: false }
+						}
+					}
+				}
+
+				// Oq shashkalar (pastki 3 qator, faqat qora kataklar)
+				for (let row = 5; row < 8; row++) {
+					for (let col = 0; col < 8; col++) {
+						if ((row + col) % 2 === 1) {
+							this.board[row][col] = { color: 'white', dama: false }
+						}
+					}
+				}
+			}
+
+			render() {
+				const boardElement = document.getElementById('board')
+				boardElement.innerHTML = ''
+
+				for (let row = 0; row < 8; row++) {
+					for (let col = 0; col < 8; col++) {
+						const cell = document.createElement('div')
+						cell.className = `cell ${(row + col) % 2 === 0 ? 'light' : 'dark'}`
+						cell.onclick = () => this.handleCellClick(row, col)
+
+						if (this.selectedPiece && this.selectedPiece.row === row && this.selectedPiece.col === col) {
+							cell.classList.add('selected')
+						}
+
+						const moveType = this.getMoveType(row, col)
+						if (moveType === 'move') {
+							cell.classList.add('possible-move')
+						} else if (moveType === 'capture') {
+							cell.classList.add('possible-capture')
+						}
+
+						const piece = this.board[row][col]
+						if (piece) {
+							const pieceElement = document.createElement('div')
+							pieceElement.className = `piece ${piece.color}${piece.dama ? ' dama' : ''}`
+							cell.appendChild(pieceElement)
+						}
+
+						boardElement.appendChild(cell)
+					}
+				}
+			}
+
+			getMoveType(row, col) {
+				const move = this.possibleMoves.find(m => m.row === row && m.col === col)
+				if (!move) return null
+				return move.captures && move.captures.length > 0 ? 'capture' : 'move'
+			}
+
+			handleCellClick(row, col) {
+				const piece = this.board[row][col]
+
+				if (this.selectedPiece) {
+					const move = this.possibleMoves.find(m => m.row === row && m.col === col)
+					if (move) {
+						this.makeMove(this.selectedPiece, move)
+						return
+					}
+				}
+
+				// Agar ketma-ket yutish rejimida bo'lsa, faqat o'sha toshni tanlash mumkin
+				if (this.captureSequence && this.selectedPiece) {
+					if (row !== this.selectedPiece.row || col !== this.selectedPiece.col) {
+						return
+					}
+				}
+
+				if (piece && piece.color === this.currentPlayer) {
+					this.selectPiece(row, col)
+				} else {
+					this.deselectPiece()
+				}
+			}
+
+			selectPiece(row, col) {
+				this.selectedPiece = { row, col }
+				this.possibleMoves = this.getPossibleMoves(row, col)
+				this.render()
+			}
+
+			deselectPiece() {
+				this.selectedPiece = null
+				this.possibleMoves = []
+				this.render()
+			}
+
+			getPossibleMoves(row, col) {
+				const piece = this.board[row][col]
+				if (!piece) return []
+
+				// Avval yutish harakatlarini qidirish
+				const captureMoves = this.getCaptureMoves(row, col)
+
+				// Agar ketma-ket yutish rejimida bo'lsa yoki yutish majburiy bo'lsa
+				if (this.captureSequence || this.mustCapture || captureMoves.length > 0) {
+					return captureMoves
+				}
+
+				// Oddiy harakatlar
+				return this.getRegularMoves(row, col)
+			}
+
+			getCaptureMoves(row, col, captured = []) {
+				const piece = this.board[row][col]
+				const moves = []
+				const directions = piece.dama ?
+					[[-1, -1], [-1, 1], [1, -1], [1, 1]] :
+					piece.color === 'white' ? [[-1, -1], [-1, 1]] : [[1, -1], [1, 1]]
+
+				// Har bir yo'nalish uchun yutish imkoniyatini tekshirish
+				for (const [dRow, dCol] of directions) {
+					const capturesInDirection = this.getCapturesInDirection(row, col, dRow, dCol, captured)
+
+					for (const captureSequence of capturesInDirection) {
+						const landRow = captureSequence.landRow
+						const landCol = captureSequence.landCol
+						const newCaptured = [...captured, ...captureSequence.captures]
+
+						// Vaqtincha board o'zgartirib, qo'shimcha yutishni tekshirish
+						const tempBoard = JSON.parse(JSON.stringify(this.board))
+						for (const capture of newCaptured) {
+							tempBoard[capture.row][capture.col] = null
+						}
+						tempBoard[landRow][landCol] = piece
+						tempBoard[row][col] = null
+
+						const originalBoard = this.board
+						this.board = tempBoard
+
+						// BARCHA yo'nalishlarda qo'shimcha yutish imkoniyatini tekshirish
+						const additionalCaptures = this.getCaptureMoves(landRow, landCol, newCaptured)
+						this.board = originalBoard
+
+						if (additionalCaptures.length > 0) {
+							// Qo'shimcha yutish mavjud
+							moves.push(...additionalCaptures)
+						} else {
+							// Oxirgi yutish
+							moves.push({
+								row: landRow,
+								col: landCol,
+								captures: newCaptured
+							})
+						}
+					}
+				}
+
+				return moves
+			}
+
+			getCapturesInDirection(row, col, dRow, dCol, alreadyCaptured) {
+				const piece = this.board[row][col]
+				const captures = []
+
+				if (piece.dama) {
+					// Dama uchun - bir yo'nalishda ketma-ket yutish
+					const capturedInDirection = []
+					let foundCapture = false
+
+					for (let step = 1; step < 8; step++) {
+						const checkRow = row + dRow * step
+						const checkCol = col + dCol * step
+
+						if (!this.isValidPosition(checkRow, checkCol)) break
+
+						const targetPiece = this.board[checkRow][checkCol]
+						if (!targetPiece) {
+							// Bo'sh joy - agar yutish bo'lgan bo'lsa, qo'nish mumkin
+							if (foundCapture) {
+								captures.push({
+									landRow: checkRow,
+									landCol: checkCol,
+									captures: [...capturedInDirection]
+								})
+							}
+							continue
+						}
+
+						if (targetPiece.color === piece.color) break
+
+						// Raqib shashkasi
+						if (!alreadyCaptured.some(c => c.row === checkRow && c.col === checkCol)) {
+							capturedInDirection.push({ row: checkRow, col: checkCol })
+							foundCapture = true
+						} else {
+							break
+						}
+					}
+				} else {
+					// Oddiy shashka uchun - faqat bitta yutish
+					const enemyRow = row + dRow
+					const enemyCol = col + dCol
+
+					if (this.isValidPosition(enemyRow, enemyCol)) {
+						const enemyPiece = this.board[enemyRow][enemyCol]
+						if (enemyPiece &&
+							enemyPiece.color !== piece.color &&
+							!alreadyCaptured.some(c => c.row === enemyRow && c.col === enemyCol)) {
+
+							const landRow = row + dRow * 2
+							const landCol = col + dCol * 2
+
+							if (this.isValidPosition(landRow, landCol) && !this.board[landRow][landCol]) {
+								captures.push({
+									landRow: landRow,
+									landCol: landCol,
+									captures: [{ row: enemyRow, col: enemyCol }]
+								})
+							}
+						}
+					}
+				}
+
+				return captures
+			}
+
+			getRegularMoves(row, col) {
+				const piece = this.board[row][col]
+				const moves = []
+				const directions = piece.dama ?
+					[[-1, -1], [-1, 1], [1, -1], [1, 1]] :
+					piece.color === 'white' ? [[-1, -1], [-1, 1]] : [[1, -1], [1, 1]]
+
+				for (const [dRow, dCol] of directions) {
+					if (piece.dama) {
+						// Dama uchun - istalgan masofaga yurish
+						for (let step = 1; step < 8; step++) {
+							const newRow = row + dRow * step
+							const newCol = col + dCol * step
+
+							if (!this.isValidPosition(newRow, newCol) || this.board[newRow][newCol]) break
+
+							moves.push({ row: newRow, col: newCol, captures: [] })
+						}
+					} else {
+						// Oddiy shashka uchun - faqat bir qadam
+						const newRow = row + dRow
+						const newCol = col + dCol
+
+						if (this.isValidPosition(newRow, newCol) && !this.board[newRow][newCol]) {
+							moves.push({ row: newRow, col: newCol, captures: [] })
+						}
+					}
+				}
+
+				return moves
+			}
+
+			isValidPosition(row, col) {
+				return row >= 0 && row < 8 && col >= 0 && col < 8
+			}
+
+			getAllCaptureMoves(playerColor) {
+				const captureMoves = []
+				for (let row = 0; row < 8; row++) {
+					for (let col = 0; col < 8; col++) {
+						const piece = this.board[row][col]
+						if (piece && piece.color === playerColor) {
+							const moves = this.getCaptureMoves(row, col)
+							if (moves.length > 0) {
+								captureMoves.push(...moves.map(move => ({ piece: { row, col }, move })))
+							}
+						}
+					}
+				}
+				return captureMoves
+			}
+
+			makeMove(from, to) {
+				const piece = this.board[from.row][from.col]
+
+				// Tarixni saqlash
+				this.gameHistory.push({
+					board: JSON.parse(JSON.stringify(this.board)),
+					player: this.currentPlayer,
+					captured: { ...this.capturedPieces },
+					mustCapture: this.mustCapture,
+					captureSequence: this.captureSequence
+				})
+
+				// Shashkani ko'chirish
+				this.board[to.row][to.col] = piece
+				this.board[from.row][from.col] = null
+
+				// Yutish (barcha ketma-ket yutilgan shashkalar)
+				if (to.captures && to.captures.length > 0) {
+					for (const capture of to.captures) {
+						this.board[capture.row][capture.col] = null
+						this.capturedPieces[piece.color === 'white' ? 'black' : 'white']++
+					}
+
+					// Ketma-ket yutish tugadi - xabar ko'rsatish
+					const captureCount = to.captures.length
+					if (captureCount > 1) {
+						document.getElementById('message').textContent =
+							`🔥 Ajoyib! ${captureCount} ta shashka ketma-ket yutildi!`
+						document.getElementById('message').className = 'message capture-mode'
+					} else {
+						document.getElementById('message').textContent = '⚔️ Shashka yutildi!'
+						document.getElementById('message').className = 'message capture-mode'
+					}
+				} else {
+					// Oddiy yurish
+					document.getElementById('message').textContent = ''
+					document.getElementById('message').className = 'message'
+				}
+
+				// Dama qilish
+				if ((piece.color === 'white' && to.row === 0) ||
+					(piece.color === 'black' && to.row === 7)) {
+					piece.dama = true
+					document.getElementById('message').textContent += ' 👑 Dama bo\'ldi!'
+					document.getElementById('message').className = 'message winner'
+				}
+
+				// Navbatni o'zgartirish
+				this.currentPlayer = this.currentPlayer === 'white' ? 'black' : 'white'
+				this.mustCapture = false
+				this.captureSequence = false
+				this.deselectPiece()
+
+				// Keyingi o'yinchi uchun majburiy yutishni tekshirish
+				const nextPlayerCaptures = this.getAllCaptureMoves(this.currentPlayer)
+				if (nextPlayerCaptures.length > 0) {
+					this.mustCapture = true
+				}
+
+				this.updateDisplay()
+				this.checkWinner()
+			}
+
+			updateDisplay() {
+				document.getElementById('currentPlayer').textContent =
+					this.currentPlayer === 'white' ? 'Oq' : 'Qora'
+
+				const totalCaptured = this.capturedPieces.white + this.capturedPieces.black
+				document.getElementById('captured').textContent = totalCaptured
+
+				// Qolgan shashkalarni hisoblash
+				let whiteCount = 0, blackCount = 0
+				for (let row = 0; row < 8; row++) {
+					for (let col = 0; col < 8; col++) {
+						const piece = this.board[row][col]
+						if (piece) {
+							if (piece.color === 'white') whiteCount++
+							else blackCount++
+						}
+					}
+				}
+
+				document.getElementById('whiteScore').textContent = whiteCount
+				document.getElementById('blackScore').textContent = blackCount
+			}
+
+			checkWinner() {
+				let whitePieces = 0, blackPieces = 0
+				let whiteMoves = 0, blackMoves = 0
+
+				for (let row = 0; row < 8; row++) {
+					for (let col = 0; col < 8; col++) {
+						const piece = this.board[row][col]
+						if (piece) {
+							if (piece.color === 'white') {
+								whitePieces++
+								const moves = this.getRegularMoves(row, col)
+								const captures = this.getCaptureMoves(row, col)
+								whiteMoves += moves.length + captures.length
+							} else {
+								blackPieces++
+								const moves = this.getRegularMoves(row, col)
+								const captures = this.getCaptureMoves(row, col)
+								blackMoves += moves.length + captures.length
+							}
+						}
+					}
+				}
+
+				const messageElement = document.getElementById('message')
+
+				if (whitePieces === 0 || (this.currentPlayer === 'white' && whiteMoves === 0)) {
+					messageElement.textContent = '🎉 Qora g\'olib bo\'ldi!'
+					messageElement.className = 'message winner'
+				} else if (blackPieces === 0 || (this.currentPlayer === 'black' && blackMoves === 0)) {
+					messageElement.textContent = '🎉 Oq g\'olib bo\'ldi!'
+					messageElement.className = 'message winner'
+				} else if (!this.captureSequence) {
+					messageElement.textContent = this.mustCapture ? 'Yutish majburiy!' : ''
+					messageElement.className = this.mustCapture ? 'message capture-mode' : 'message'
+				}
+			}
+
+			reset() {
+				this.currentPlayer = 'white'
+				this.selectedPiece = null
+				this.possibleMoves = []
+				this.gameHistory = []
+				this.capturedPieces = { white: 0, black: 0 }
+				this.mustCapture = false
+				this.captureSequence = false
+				this.createBoard()
+				this.setupPieces()
+				this.render()
+				this.updateDisplay()
+				document.getElementById('message').textContent = ''
+				document.getElementById('message').className = 'message'
+			}
+
+			undo() {
+				if (this.gameHistory.length > 0) {
+					const previousState = this.gameHistory.pop()
+					this.board = previousState.board
+					this.currentPlayer = previousState.player
+					this.capturedPieces = previousState.captured
+					this.mustCapture = previousState.mustCapture
+					this.captureSequence = previousState.captureSequence
+					this.deselectPiece()
+					this.updateDisplay()
+				}
+			}
+		}
+
+		let game
+
+		function initGame() {
+			game = new ShashkaGame()
+		}
+
+		function resetGame() {
+			game.reset()
+		}
+
+		function undoMove() {
+			game.undo()
+		}
+
+		function showRules() {
+			alert(`🏁 SHASHKA QOIDALARI:
+
+📋 Asosiy qoidalar:
+• Faqat qora kataklarda o'ynaladi
+• Oddiy shashka faqat oldinga diagonal yuradi
+• Yutish majburiy hisoblanadi
+
+♛ Dama (Qirol):
+• Oxirgi qatorga yetgan shashka dama bo'ladi
+• Dama oldinga ham, orqaga ham istalgan masofaga yuradi
+
+⚔️ Yutish:
+• Raqib shashkasini sakrab o'tib yuting
+• Ketma-ket bir nechta shashkani yutish mumkin
+• Yutish majburiy - agar yuta olsangiz, yutishingiz kerak
+
+🏆 G'alaba:
+• Raqibning hamma shashkalarini yuting
+• Yoki raqibni yurish qila olmaydigan qilib qo'ying`)
+		}
+
+		// O'yinni boshlash
+		window.onload = initGame;
+	</script>
+</body>
+
+</html>
